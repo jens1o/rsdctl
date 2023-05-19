@@ -2,6 +2,7 @@
 
 use anyhow::Result;
 
+mod gui;
 mod wiki;
 
 use crate::wiki::{Section, Token};
@@ -11,8 +12,8 @@ fn print_tokens(tokens: &Vec<Token>) {
         match token {
             Token::Word(w) => {
                 let blanked: String = std::iter::repeat('_').take(w.len()).collect();
-                // print!("{}", blanked);
-                print!("{}", w);
+                print!("{}", blanked);
+                // print!("{}", w);
             }
             Token::NonWord(w) => {
                 print!("{}", w);
@@ -58,11 +59,10 @@ fn print_sections(sections: &Vec<Section>) {
 
 fn main() -> Result<()> {
 
-    // let wikitext = get_wikipedia_article("en", "Z22 (computer)")?;
-    let wikitext = wiki::load_article("en", "English language")?;
+    let wikitext = wiki::load_article("en", "Z22 (computer)")?;
+    // let wikitext = wiki::load_article("en", "English language")?;
 
-    println!("-------------------------------------");
-    print_sections(&wikitext);
+    gui::launch();
 
     Ok(())
 }

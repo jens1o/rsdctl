@@ -66,12 +66,24 @@ fn chop_into_tokens(input: &str) -> Vec<Token> {
     result
 }
 
+fn get_parameter_by_name(parameters: &Vec<parse_wiki_text::Parameter>, name: &str) -> Option<String> {
+    for param in parameters.iter() {
+        if let Some(name_nodes) = &param.name {
+            let n = get_inline_text(&name_nodes);
+            if n == name {
+                return Some(get_inline_text(&param.value));
+            }
+        }
+    }
+    None
+}
+
 fn get_template_text(template: &Node) -> String {
     let Node::Template { name, parameters, .. } = template else { panic!("Argument must be template") };
 
     let name = get_inline_text(name);
 
-    match name.as_str() {
+    match name.to_lowercase().as_str() {
         "lang" => {
             parameters
                 .get(1)
@@ -100,6 +112,17 @@ fn get_template_text(template: &Node) -> String {
                 (Some(long), Some(short)) => format!("{} ({})", long, short)
             }
         }
+
+        "cite encyclopedia" => {
+            get_parameter_by_name(parameters, &"encyclopedia")
+                .unwrap_or(String::from(""))
+        }
+
+        "cite book" | "cite journal" | "cite web" | "cite news" | "cite report" | "cite periodical" => {
+            get_parameter_by_name(parameters, &"title")
+                .unwrap_or(String::from(""))
+        }
+
 
         _ => {
             println!("Discarding template named {}", name);

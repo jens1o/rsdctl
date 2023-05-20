@@ -57,12 +57,6 @@ fn print_sections(sections: &Vec<Section>) {
     }
 }
 
-fn main() -> Result<()> {
-
-    let wikitext = wiki::load_article("en", "Z22 (computer)")?;
-    // let wikitext = wiki::load_article("en", "English language")?;
-
-    gui::launch();
-
-    Ok(())
+fn main() -> Result<(), eframe::Error> {
+    gui::launch()
 }

@@ -11,3 +11,4 @@ parse_wiki_text = "0"
 reqwest = { version = "0", features = ["blocking"] }
 serde_json = "1"
 eframe = "0"
+egui-notify = "0"

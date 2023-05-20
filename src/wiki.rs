@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use parse_wiki_text::{Configuration, Node};
 use reqwest::blocking as reqwest;
 use serde_json::Value;
@@ -125,7 +125,6 @@ fn get_template_text(template: &Node) -> String {
 
 
         _ => {
-            println!("Discarding template named {}", name);
             String::from("")
         }
     }
@@ -155,7 +154,6 @@ fn get_inline_text(nodes: &Vec<Node>) -> String {
             }
 
             _ => {
-                println!("Discarding in inline text: {:?}", node);
             }
         }
     }
@@ -240,7 +238,6 @@ fn get_sections(nodes: &Vec<Node>) -> Vec<Section> {
             }
 
             _ => {
-                println!("Discarding node: {:?}", node);
             }
         }
     }
@@ -258,9 +255,13 @@ pub fn load_article(language: &str, title: &str) -> Result<Vec<Section>> {
 
     let content = reqwest::get(query)?;
     let content = content.text()?;
-    let content: Value = serde_json::from_str(&content).expect("JSON response from wiki server malformed.");
+    let content: Value = serde_json::from_str(&content)?;
 
-    let wikitext = content["parse"]["wikitext"].as_str().expect("JSON response did not contain wikitext.");
+    let wikitext = content
+        .pointer("/parse/wikitext")
+        .and_then(|val| val.as_str())
+        .ok_or(anyhow!("JSON response did not contain wikitext"))?;
+
     let output = Configuration::default().parse(wikitext);
 
     if !output.warnings.is_empty() {
@@ -272,7 +273,11 @@ pub fn load_article(language: &str, title: &str) -> Result<Vec<Section>> {
 
     let mut result = get_sections(&output.nodes);
 
-    let page_title = content["parse"]["title"].as_str().expect("JSON response did not contain wikitext.");
+    let page_title = content
+        .pointer("/parse/title")
+        .and_then(|val| val.as_str())
+        .ok_or(anyhow!("JSON response did not contain page title"))?;
+
     result.insert(0, Section::Heading(0, chop_into_tokens(page_title)));
 
     Ok(result)

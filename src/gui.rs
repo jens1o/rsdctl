@@ -37,9 +37,24 @@ impl App {
         }
     }
 
+    fn title_complete(&self) -> bool {
+        if let Some(wiki_article) = &self.wiki_article {
+            for token in &wiki_article.title {
+                if let Token::Word(w) = token {
+                    if !self.guesses.contains(&w.to_lowercase()) {
+                        return false;
+                    }
+                }
+            }
+
+            true
+        } else {
+            false
+        }
+    }
 
     fn get_word(&self, word: &str) -> String {
-        if self.guesses.contains(&word.to_lowercase()) {
+        if self.guesses.contains(&word.to_lowercase()) || self.title_complete() {
             String::from(word)
         } else {
             let dashes: Vec<&str> = std::iter::repeat("_").take(word.len()).collect();

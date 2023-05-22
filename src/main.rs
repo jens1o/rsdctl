@@ -3,10 +3,12 @@
 use anyhow::Result;
 
 mod gui;
-mod wiki;
+mod wikipedia_api;
+mod article_parser;
 
-use crate::wiki::{Section, Token};
+use crate::article_parser::{Section, Token};
 
+#[allow(dead_code)]
 fn print_tokens(tokens: &Vec<Token>) {
     for token in tokens {
         match token {
@@ -22,6 +24,7 @@ fn print_tokens(tokens: &Vec<Token>) {
     }
 }
 
+#[allow(dead_code)]
 fn print_sections(sections: &Vec<Section>) {
     for section in sections {
         match section {

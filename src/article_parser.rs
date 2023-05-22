@@ -1,7 +1,4 @@
-use anyhow::{anyhow, Result};
 use parse_wiki_text::{Configuration, Node};
-use reqwest::blocking as reqwest;
-use serde_json::Value;
 
 #[derive(Debug)]
 pub enum Token {
@@ -15,6 +12,12 @@ pub enum Section {
     Paragraph(Vec<Token>),
     UnorderedList(Vec<Vec<Section>>),
     OrderedList(Vec<Vec<Section>>),
+}
+
+#[derive(Debug)]
+pub struct WikiArticle {
+    pub title: Vec<Token>,
+    pub content: Vec<Section>,
 }
 
 fn chop_into_tokens(input: &str) -> Vec<Token> {
@@ -249,36 +252,23 @@ fn get_sections(nodes: &Vec<Node>) -> Vec<Section> {
     result
 }
 
-pub fn load_article(language: &str, title: &str) -> Result<Vec<Section>> {
+pub fn parse(title: &str, content: &str) -> WikiArticle {
 
-    let query = format!("https://{}.wikipedia.org/w/api.php?action=parse&page={}&prop=wikitext&formatversion=2&format=json", language, title);
+    let parsed = Configuration::default().parse(content);
 
-    let content = reqwest::get(query)?;
-    let content = content.text()?;
-    let content: Value = serde_json::from_str(&content)?;
-
-    let wikitext = content
-        .pointer("/parse/wikitext")
-        .and_then(|val| val.as_str())
-        .ok_or(anyhow!("JSON response did not contain wikitext"))?;
-
-    let output = Configuration::default().parse(wikitext);
-
-    if !output.warnings.is_empty() {
+    if !parsed.warnings.is_empty() {
         println!("Warnings while parsing wiki text:");
-        for warn in &output.warnings {
+        for warn in &parsed.warnings {
             println!("{} - {}: {}", warn.start, warn.end, warn.message.message());
         }
     }
 
-    let mut result = get_sections(&output.nodes);
+    let content = get_sections(&parsed.nodes);
 
-    let page_title = content
-        .pointer("/parse/title")
-        .and_then(|val| val.as_str())
-        .ok_or(anyhow!("JSON response did not contain page title"))?;
+    let title_tokens = chop_into_tokens(title);
 
-    result.insert(0, Section::Heading(0, chop_into_tokens(page_title)));
-
-    Ok(result)
+    WikiArticle{
+        title: title_tokens,
+        content: content,
+    }
 }

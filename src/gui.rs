@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use eframe::egui;
 use eframe::egui::widgets::*;
 use egui_notify::{Toasts};
@@ -9,7 +11,7 @@ use crate::wikipedia_api;
 struct App {
     selected_language: String,
     wiki_article: Option<WikiArticle>,
-    guesses: Vec<String>,
+    guesses: BTreeSet<String>,
 
     title_text_box: String,
     toasts: Toasts,
@@ -242,9 +244,10 @@ impl App {
                     ui.end_row();
 
                     if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                        self.guesses.push(self.next_guess.to_lowercase());
-                        self.next_guess.clear();
-
+                        if !self.next_guess.is_empty() {
+                            self.guesses.insert(self.next_guess.to_lowercase());
+                            self.next_guess.clear();
+                        }
                         self.focus_on_guess = true;
                     }
                 });
@@ -279,7 +282,7 @@ impl Default for App {
         Self {
             selected_language: String::from("en"),
             wiki_article: None,
-            guesses: Vec::new(),
+            guesses: BTreeSet::new(),
 
             toasts: Toasts::new(),
             next_guess: String::from(""),

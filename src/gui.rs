@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 
 use eframe::egui;
 use eframe::egui::widgets::*;
+use eframe::epaint::{Color32, text::{LayoutJob, TextFormat}};
 use egui_notify::{Toasts};
 
 use crate::article_parser;
@@ -32,6 +33,7 @@ impl App {
                 self.guesses.clear();
                 self.next_guess.clear();
                 self.title_text_box.clear();
+                self.selected_guess.clear();
             }
 
             Err(e) => {
@@ -57,7 +59,9 @@ impl App {
     }
 
     fn get_word(&self, word: &str) -> String {
-        if self.guesses.contains(&word.to_lowercase()) || self.title_complete() {
+        if self.selected_guess.to_lowercase() == word.to_lowercase() {
+            String::from(word)
+        } else if self.guesses.contains(&word.to_lowercase()) || self.title_complete() {
             String::from(word)
         } else {
             let dashes: Vec<&str> = std::iter::repeat("_").take(word.len()).collect();
@@ -71,7 +75,6 @@ impl App {
         for token in tokens {
             match token {
                 Token::Word(w) => {
-                    // result.push_str(w);
                     result.push_str(self.get_word(w).as_str());
                 }
                 Token::NonWord(w) => {
@@ -113,6 +116,69 @@ impl App {
         ui.add_space(30.0);
     }
 
+    fn add_word(&self, job: &mut LayoutJob, ui: &egui::Ui, word: &str) {
+        if self.selected_guess.to_lowercase() == word.to_lowercase() {
+            job.append(
+                word,
+                0.0,
+                TextFormat {
+                    font_id: egui::TextStyle::Monospace.resolve(ui.style()),
+                    color: Color32::BLACK,
+                    background: Color32::LIGHT_BLUE,
+                    ..Default::default()
+                },
+            );
+        } else if self.guesses.contains(&word.to_lowercase()) || self.title_complete() {
+            job.append(
+                word,
+                0.0,
+                TextFormat {
+                    font_id: egui::TextStyle::Monospace.resolve(ui.style()),
+                    ..Default::default()
+                },
+            );
+        } else {
+            let dashes: Vec<&str> = std::iter::repeat("_").take(word.len()).collect();
+            let dashes = dashes.concat();
+            job.append(
+                &dashes,
+                0.0,
+                TextFormat {
+                    font_id: egui::TextStyle::Monospace.resolve(ui.style()),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    fn show_paragraph(&self, ui:  &mut egui::Ui, tokens: &Vec<Token>) {
+        let mut job = LayoutJob::default();
+        job.wrap.max_width = ui.available_width();
+
+        for token in tokens {
+            match token {
+                Token::Word(w) => {
+                    self.add_word(&mut job, &ui, w);
+                }
+                Token::NonWord(w) => {
+                    job.append(
+                        w,
+                        0.0,
+                        TextFormat {
+                            font_id: egui::TextStyle::Monospace.resolve(ui.style()),
+                            ..Default::default()
+                        },
+                    );
+                }
+            }
+        }
+
+        let galley = ui.fonts(|fonts| {
+            fonts.layout_job(job)
+        });
+        ui.label(galley);
+    }
+
     fn show_sections(&self, ui: &mut egui::Ui, sections: &Vec<Section>) {
         for section in sections {
             match section {
@@ -124,9 +190,12 @@ impl App {
                 }
 
                 Section::Paragraph(tokens) => {
-                    let text = self.concat_tokens(&tokens);
-                    ui.monospace(text);
+                    self.show_paragraph(ui, tokens);
                     ui.add_space(10.0);
+
+                    // let text = self.concat_tokens(&tokens);
+                    // ui.label(text);
+                    // ui.add_space(10.0);
                 }
 
                 Section::UnorderedList(list_items) => {

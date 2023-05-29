@@ -16,6 +16,7 @@ struct App {
     title_text_box: String,
     toasts: Toasts,
     next_guess: String,
+    selected_guess: String,
     focus_on_guess: bool,
 }
 
@@ -227,7 +228,16 @@ impl App {
                         let occurs = self.count_word_in_article(guess.as_str());
 
                         ui.label(format!("{}", occurs));
-                        ui.label(guess);
+
+                        let is_guess_selected = *guess == self.selected_guess;
+                        if ui.selectable_label(is_guess_selected, guess).clicked() {
+                            if is_guess_selected {
+                                self.selected_guess = String::from("");
+                            } else {
+                                self.selected_guess = guess.clone();
+                            }
+                        }
+
                         ui.end_row();
                     }
 
@@ -286,6 +296,7 @@ impl Default for App {
 
             toasts: Toasts::new(),
             next_guess: String::from(""),
+            selected_guess: String::from(""),
             focus_on_guess: false,
             title_text_box: String::from(""),
         }

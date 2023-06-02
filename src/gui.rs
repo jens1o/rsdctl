@@ -310,6 +310,23 @@ impl App {
     }
 
     fn show_guesses(&mut self, ui: &mut egui::Ui) {
+
+        let next_guess_edit = TextEdit::singleline(&mut self.next_guess);
+        let resp = ui.add(next_guess_edit);
+
+        if self.focus_on_guess {
+            resp.request_focus();
+            self.focus_on_guess = false;
+        }
+
+        if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+            if !self.next_guess.is_empty() {
+                self.guesses.insert(self.next_guess.to_lowercase());
+                self.next_guess.clear();
+            }
+            self.focus_on_guess = true;
+        }
+
         egui::ScrollArea::vertical().stick_to_bottom(true).show(ui, |ui| {
             egui::Grid::new("guesses_grid")
                 .num_columns(2)
@@ -328,28 +345,7 @@ impl App {
                                 self.selected_guess = guess.clone();
                             }
                         }
-
                         ui.end_row();
-                    }
-
-                    ui.label("");
-
-                    let next_guess_edit = TextEdit::singleline(&mut self.next_guess);
-                    let resp = ui.add(next_guess_edit);
-
-                    if self.focus_on_guess {
-                        resp.request_focus();
-                        self.focus_on_guess = false;
-                    }
-
-                    ui.end_row();
-
-                    if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                        if !self.next_guess.is_empty() {
-                            self.guesses.insert(self.next_guess.to_lowercase());
-                            self.next_guess.clear();
-                        }
-                        self.focus_on_guess = true;
                     }
                 });
         });

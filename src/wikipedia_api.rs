@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use ::reqwest::redirect::Policy;
 use reqwest::blocking as reqwest;
 use serde_json::Value;
 
@@ -20,4 +21,25 @@ pub fn download_article(language: &str, title: &str) -> Result<(String, String)>
         .ok_or(anyhow!("JSON response did not contain page title"))?;
 
     Ok((String::from(page_title), String::from(wikitext)))
+}
+
+pub fn random_english_article() -> Result<String> {
+    let query = "https://randomincategory.toolforge.org/?category=All_Wikipedia_level-4_vital_articles&server=en.wikipedia.org&cmnamespace=&cmtype=&returntype=subject&debug=0";
+
+    let client = reqwest::Client::builder()
+        .user_agent("curl/8.1.2")
+        .redirect(Policy::none())
+        .build()?;
+
+    let response = client.get(query).send()?;
+    let redir_header = response.headers().get("location").ok_or(anyhow!("Could not find location header"))?;
+    let redir_location = redir_header.to_str()?;
+
+    let redir_prefix = "https://en.wikipedia.org/wiki/";
+
+    if !redir_location.starts_with(redir_prefix) {
+        return Err(anyhow!("Redirect had unexpected format: {}", redir_location));
+    }
+
+    Ok(String::from(&redir_location[redir_prefix.len()..]))
 }

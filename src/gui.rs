@@ -42,6 +42,22 @@ impl App {
         }
     }
 
+    fn load_random_article(&mut self) {
+	let article = wikipedia_api::random_english_article();
+
+	match article {
+	    Ok(name) => {
+		self.selected_language = String::from("en");
+		self.title_text_box = name;
+		self.load_article();
+	    }
+
+	    Err(e) => {
+		self.toasts.error(format!("{}", e));
+	    }
+	}
+    }
+
     fn title_complete(&self) -> bool {
         if let Some(wiki_article) = &self.wiki_article {
             for token in &wiki_article.title {
@@ -107,6 +123,12 @@ impl App {
                 if load_btn.clicked() {
                     self.load_article();
                 }
+
+		let random_btn = ui.button("random");
+
+		if random_btn.clicked() {
+		    self.load_random_article();
+		}
             });
     }
 

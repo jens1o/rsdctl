@@ -80,7 +80,7 @@ impl App {
         } else if self.guesses.contains(&word.to_lowercase()) || self.title_complete() {
             String::from(word)
         } else {
-            let dashes: Vec<&str> = std::iter::repeat("_").take(word.len()).collect();
+            let dashes: Vec<&str> = std::iter::repeat("_").take(word.chars().count()).collect();
             dashes.concat()
         }
     }
@@ -160,7 +160,7 @@ impl App {
                 },
             );
         } else {
-            let dashes: Vec<&str> = std::iter::repeat("_").take(word.len()).collect();
+            let dashes: Vec<&str> = std::iter::repeat("_").take(word.chars().count()).collect();
             let dashes = dashes.concat();
             job.append(
                 &dashes,

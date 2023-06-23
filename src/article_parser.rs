@@ -116,6 +116,33 @@ fn get_template_text(template: &Node) -> String {
             }
         }
 
+	"blockquote" => {
+            let quote =
+                parameters
+                .get(0)
+                .map(|param| { get_inline_text(&param.value) });
+
+            let source =
+                parameters
+                .get(1)
+                .map(|param| { get_inline_text(&param.value) });
+
+	    let mut result = String::new();
+
+	    if let Some(q) = quote {
+		result.push_str("“");
+		result.push_str(&q);
+		result.push_str("”");
+
+		if let Some(s) = source {
+		    result.push_str(" – ");
+		    result.push_str(&s);
+		}
+	    }
+
+	    result
+	}
+
         "cite encyclopedia" => {
             get_parameter_by_name(parameters, &"encyclopedia")
                 .unwrap_or(String::from(""))

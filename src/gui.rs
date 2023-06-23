@@ -352,6 +352,8 @@ impl App {
     }
 
     fn show_gui(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+	ctx.set_pixels_per_point(2.0);
+
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             self.show_top_bar(ui);
         });

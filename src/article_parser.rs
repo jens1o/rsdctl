@@ -126,6 +126,28 @@ fn get_template_text(template: &Node) -> String {
                 .unwrap_or(String::from(""))
         }
 
+	"cvt" | "convert" => {
+	    let number =
+                parameters
+                .get(0)
+                .map(|param| { get_inline_text(&param.value) });
+
+	    let unit =
+                parameters
+                .get(1)
+                .map(|param| { get_inline_text(&param.value) });
+
+	    match (number, unit) {
+		(None, None) => String::from(""),
+
+		(Some(n), None) => format!("{}", n),
+
+		(None, Some(u)) => format!("??? {}", u),
+
+		(Some(n), Some(u)) => format!("{} {}", n, u)
+	    }
+	}
+
 
         _ => {
             String::from("")

@@ -148,6 +148,9 @@ fn get_template_text(template: &Node) -> String {
 	    }
 	}
 
+	"endash" => {
+	    String::from("–")
+	}
 
         _ => {
             String::from("")

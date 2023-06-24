@@ -320,8 +320,9 @@ impl App {
         }
 
         if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-            if !self.next_guess.is_empty() {
-                self.guesses.insert(self.next_guess.to_lowercase());
+            let entered_guess = self.next_guess.trim();
+            if !entered_guess.is_empty() {
+                self.guesses.insert(entered_guess.to_lowercase());
                 self.next_guess.clear();
             }
             self.focus_on_guess = true;
